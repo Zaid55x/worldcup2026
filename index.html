@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FIFA 2026 CHALLENGE | $25,000 GOAL</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+
+    <style>
+        :root {
+            --fifa-gold: #d4af37;
+            --fifa-blue: #0052ff;
+            --fifa-dark: #000a21;
+            --fifa-navy: #001242;
+            --silver: #cbd5e1;
+            --white: #ffffff;
+            --glass: rgba(255, 255, 255, 0.03);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background-color: var(--fifa-dark);
+            color: var(--white);
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        /* --- UCL STYLE STAR BACKGROUND --- */
+        #bg-canvas {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -1;
+            background: radial-gradient(circle at 50% 10%, var(--fifa-navy), var(--fifa-dark));
+        }
+
+        /* --- INTRO --- */
+        #intro-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100vh;
+            background: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        .intro-text {
+            font-family: 'Bebas Neue', cursive;
+            font-size: clamp(2.5rem, 12vw, 7rem);
+            color: var(--white);
+            letter-spacing: 20px;
+            text-shadow: 0 0 50px var(--fifa-gold);
+            opacity: 0;
+            animation: cinematic 3.5s ease-in-out forwards;
+        }
+
+        @keyframes cinematic {
+            0% { opacity: 0; letter-spacing: 30px; filter: blur(20px); }
+            50% { opacity: 1; filter: blur(0px); }
+            100% { opacity: 0; letter-spacing: 15px; }
+        }
+
+        /* --- MAIN SITE --- */
+        #main-site {
+            display: none;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        /* Trophy & Target Section */
+        .trophy-container {
+            position: relative;
+            display: inline-block;
+            margin-top: 30px;
+            margin-bottom: 20px;
+        }
+
+        .fifa-trophy {
+            width: 220px;
+            filter: drop-shadow(0 0 30px rgba(212, 175, 55, 0.4));
+            animation: float 4s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+        }
+
+        .target-badge {
+            position: absolute;
+            top: 45%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--fifa-gold);
+            padding: 10px 20px;
+            border-radius: 50px;
+            white-space: nowrap;
+            box-shadow: 0 0 20px var(--fifa-gold);
+        }
+
+        .target-badge h2 {
+            font-family: 'Bebas Neue', cursive;
+            font-size: 1.8rem;
+            color: var(--white);
+            margin: 0;
+        }
+
+        .target-badge p {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--fifa-gold);
+            font-weight: 800;
+        }
+
+        h1 {
+            font-family: 'Bebas Neue', cursive;
+            font-size: clamp(2rem, 8vw, 3.5rem);
+            letter-spacing: 2px;
+            margin-bottom: 30px;
+            color: var(--silver);
+        }
+
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 40px;
+        }
+
+        .stat-card {
+            background: var(--glass);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 20px;
+            text-align: left;
+        }
+
+        .stat-card .label { font-size: 0.65rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; }
+        .stat-card .val { font-family: 'Bebas Neue', cursive; font-size: 2.2rem; color: var(--white); margin: 5px 0; }
+
+        .bar-bg { width: 100%; height: 6px; background: rgba(255,255,255,0.05); border-radius: 10px; margin-top: 10px; overflow: hidden; }
+        .bar-fill { height: 100%; width: 0%; transition: width 2s ease; background: var(--fifa-gold); box-shadow: 0 0 10px var(--fifa-gold); }
+
+        /* Support Section */
+        .support-text {
+            font-weight: 800;
+            letter-spacing: 3px;
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+        }
+
+        .arrow {
+            font-size: 2rem;
+            display: block;
+            margin-bottom: 25px;
+            animation: bounce 1s infinite;
+            color: var(--fifa-gold);
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(10px); }
+        }
+
+        /* Buttons */
+        .btn-container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+            max-width: 450px;
+            margin: 0 auto;
+        }
+
+        .premium-btn {
+            background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.02));
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: var(--white);
+            padding: 22px;
+            border-radius: 15px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-size: 0.9rem;
+            backdrop-filter: blur(5px);
+        }
+
+        .premium-btn:hover {
+            border-color: var(--fifa-gold);
+            background: rgba(212, 175, 55, 0.1);
+            transform: scale(1.02);
+        }
+
+        .premium-btn.done {
+            border-color: #10b981;
+            color: #10b981;
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        /* Cooldown Timer */
+        #cooldown-box {
+            display: none;
+            background: var(--glass);
+            border: 1px solid var(--fifa-gold);
+            padding: 40px;
+            border-radius: 25px;
+            margin-top: 20px;
+        }
+
+        #timer {
+            font-family: 'Bebas Neue', cursive;
+            font-size: 4rem;
+            color: var(--white);
+            text-shadow: 0 0 20px var(--fifa-gold);
+        }
+
+        @media (max-width: 500px) {
+            .stats-grid { grid-template-columns: 1fr; }
+            .fifa-trophy { width: 180px; }
+            .target-badge h2 { font-size: 1.4rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="bg-canvas"></canvas>
+
+    <!-- Intro Animation -->
+    <div id="intro-overlay">
+        <div class="intro-text">ONE LIFE. ONE DREAM.</div>
+    </div>
+
+    <!-- Main Content -->
+    <div id="main-site">
+        <div class="trophy-container">
+            <!-- FIFA 2026 Trophy Image -->
+            <img src="https://i.ibb.co/VYd1tvvw/Picsart-26-06-07-15-17-53-758.png" alt="FIFA 2026 Trophy" class="fifa-trophy">
+            <div class="target-badge">
+                <h2>$25,000</h2>
+                <p>/ 12.5 Million Clicks</p>
+            </div>
+        </div>
+
+        <h1>THE FIFA CHALLENGE</h1>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <span class="label">Clicks Secured</span>
+                <div class="val" id="clicks-display">0</div>
+                <span style="font-size: 0.6rem; color: var(--fifa-gold);">TARGET: 12.5M</span>
+                <div class="bar-bg"><div id="clicks-bar" class="bar-fill"></div></div>
+            </div>
+            <div class="stat-card">
+                <span class="label">Revenue Earned</span>
+                <div class="val" id="money-display" style="color: #10b981;">$0</div>
+                <span style="font-size: 0.6rem; color: #10b981;">TARGET: $25,000</span>
+                <div class="bar-bg"><div id="money-bar" class="bar-fill" style="background: #10b981;"></div></div>
+            </div>
+        </div>
+
+        <div id="action-area">
+            <p class="support-text">CLICK TO SUPPORT</p>
+            <span class="arrow">⬇</span>
+
+            <div class="btn-container">
+                <button class="premium-btn" id="b0" onclick="handleTask(0, 'https://www.effectivecpmnetwork.com/krqktmkpkj?key=97e1eff02632eefd3fe0ea6ed9a1c38f')">Button 1</button>
+                <button class="premium-btn" id="b1" onclick="handleTask(1, 'https://omg10.com/4/11064059')">Button 2</button>
+            </div>
+        </div>
+
+        <div id="cooldown-box">
+            <p style="text-transform: uppercase; letter-spacing: 2px; color: var(--fifa-gold);">Session Completed</p>
+            <p style="font-size: 0.8rem; margin: 10px 0; opacity: 0.6;">NEXT CONTRIBUTION OPENS IN:</p>
+            <div id="timer">06:00:00</div>
+        </div>
+    </div>
+
+    <script>
+        // --- FIREBASE CONFIG ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyDiPYAzwdLAu5CAFY7JxKa419UhG4mCBEs",
+            authDomain: "world-cup-938c0.firebaseapp.com",
+            databaseURL: "https://world-cup-938c0-default-rtdb.firebaseio.com",
+            projectId: "world-cup-938c0",
+            storageBucket: "world-cup-938c0.firebasestorage.app",
+            messagingSenderId: "654744656369",
+            appId: "1:654744656369:web:3124ce38c79557e861cc50"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        const CLICK_TARGET = 12500000;
+        const MONEY_TARGET = 25000;
+
+        // Intro Logic
+        window.onload = () => {
+            if (sessionStorage.getItem('fifa_intro_v2')) {
+                document.getElementById('intro-overlay').style.display = 'none';
+                document.getElementById('main-site').style.display = 'block';
+                startApp();
+            } else {
+                setTimeout(() => {
+                    document.getElementById('intro-overlay').style.opacity = '0';
+                    setTimeout(() => {
+                        document.getElementById('intro-overlay').style.display = 'none';
+                        document.getElementById('main-site').style.display = 'block';
+                        sessionStorage.setItem('fifa_intro_v2', 'true');
+                        startApp();
+                    }, 1000);
+                }, 3500);
+            }
+        };
+
+        function startApp() {
+            syncData();
+            checkCooldown();
+            drawTwinklingStars();
+        }
+
+        function syncData() {
+            db.ref('fifa_stats/clicks').on('value', (snapshot) => {
+                const clicks = snapshot.val() || 0;
+                const money = (clicks * (MONEY_TARGET / CLICK_TARGET)).toFixed(2);
+                
+                document.getElementById('clicks-display').innerText = clicks.toLocaleString();
+                document.getElementById('money-display').innerText = "$" + parseFloat(money).toLocaleString();
+                
+                document.getElementById('clicks-bar').style.width = Math.min((clicks/CLICK_TARGET)*100, 100) + "%";
+                document.getElementById('money-bar').style.width = Math.min((money/MONEY_TARGET)*100, 100) + "%";
+            });
+        }
+
+        let taskDone = JSON.parse(localStorage.getItem('fifa_done_v2')) || [];
+
+        function handleTask(id, url) {
+            db.ref('fifa_stats/clicks').transaction(c => (c || 0) + 1);
+            window.open(url, '_blank');
+            
+            setTimeout(() => {
+                if(!taskDone.includes(id)) {
+                    taskDone.push(id);
+                    localStorage.setItem('fifa_done_v2', JSON.stringify(taskDone));
+                }
+                refreshButtons();
+            }, 1000);
+        }
+
+        function refreshButtons() {
+            taskDone.forEach(id => {
+                const btn = document.getElementById('b' + id);
+                if(btn) { btn.classList.add('done'); btn.innerText = "Contribution Synced ✓"; }
+            });
+            if(taskDone.length === 2) activateCooldown();
+        }
+
+        function activateCooldown() {
+            let unlock = localStorage.getItem('fifa_unlock_v2');
+            if(!unlock) {
+                unlock = Date.now() + (6 * 60 * 60 * 1000);
+                localStorage.setItem('fifa_unlock_v2', unlock);
+            }
+            document.getElementById('action-area').style.display = 'none';
+            document.getElementById('cooldown-box').style.display = 'block';
+
+            const timerItv = setInterval(() => {
+                const remaining = unlock - Date.now();
+                if(remaining <= 0) {
+                    clearInterval(timerItv);
+                    localStorage.removeItem('fifa_done_v2');
+                    localStorage.removeItem('fifa_unlock_v2');
+                    location.reload();
+                }
+                const h = Math.floor(remaining/3600000);
+                const m = Math.floor((remaining%3600000)/60000);
+                const s = Math.floor((remaining%60000)/1000);
+                document.getElementById('timer').innerText = 
+                    `${h < 10 ? '0' : ''}${h}:${m < 10 ? '0' : ''}${m}:${s < 10 ? '0' : ''}${s}`;
+            }, 1000);
+        }
+
+        function checkCooldown() {
+            refreshButtons();
+            const unlock = localStorage.getItem('fifa_unlock_v2');
+            if(unlock && Date.now() < unlock) activateCooldown();
+        }
+
+        // --- UCL STYLE TWINKLING STARS LOGIC ---
+        function drawTwinklingStars() {
+            const canvas = document.getElementById('bg-canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            const stars = [];
+            for(let i=0; i<120; i++) {
+                stars.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    r: Math.random() * 1.2,
+                    o: Math.random(),
+                    v: (Math.random() * 0.02) + 0.01
+                });
+            }
+            function anim() {
+                ctx.clearRect(0,0,canvas.width, canvas.height);
+                stars.forEach(s => {
+                    ctx.beginPath();
+                    ctx.fillStyle = `rgba(255, 255, 255, ${s.o})`;
+                    ctx.arc(s.x, s.y, s.r, 0, Math.PI*2);
+                    ctx.fill();
+                    s.o += s.v;
+                    if(s.o < 0 || s.o > 1) s.v = -s.v;
+                });
+                requestAnimationFrame(anim);
+            }
+            anim();
+        }
+    </script>
+</body>
+</html>
